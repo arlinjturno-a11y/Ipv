@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#6f8064">
+<title>IPV - Control de Inventario</title>
+<style>
+:root{
+  --verde:#718268;
+  --verde-oscuro:#56664f;
+  --verde-claro:#eef2ec;
+  --fondo:#f6f6f3;
+  --blanco:#ffffff;
+  --texto:#263028;
+  --gris:#727872;
+  --borde:#d9ddd7;
+  --rojo:#b84f4f;
+  --sombra:0 5px 20px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--fondo);color:var(--texto);font-family:Arial,sans-serif;min-height:100%}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh}
+.topbar{
+  height:64px;background:var(--verde);color:white;display:flex;align-items:center;
+  justify-content:space-between;padding:0 14px;position:sticky;top:0;z-index:20;
+  box-shadow:0 2px 8px rgba(0,0,0,.12)
+}
+.topbar-title{font-size:20px;font-weight:700;letter-spacing:.3px}
+.icon-btn{
+  width:44px;height:44px;border:0;background:transparent;color:inherit;border-radius:50%;
+  font-size:25px;display:flex;align-items:center;justify-content:center
+}
+.icon-btn:active{background:rgba(255,255,255,.15)}
+.page{padding:18px;max-width:900px;margin:auto}
+.home-title{text-align:center;margin:15px 0 24px;font-size:27px}
+.home-buttons{display:grid;gap:16px}
+.big-btn{
+  min-height:82px;border:0;border-radius:18px;background:white;box-shadow:var(--sombra);
+  color:var(--texto);font-size:20px;font-weight:700;padding:18px;display:flex;align-items:center;
+  justify-content:center;gap:12px
+}
+.big-btn:active{transform:scale(.99)}
+.big-btn.primary{background:var(--verde);color:white}
+.search-home{
+  margin:20px 0 0;background:white;border:1px solid var(--borde);border-radius:16px;
+  padding:12px;display:flex;gap:9px;align-items:center
+}
+.search-home input{border:0;outline:0;width:100%;background:transparent;font-size:16px}
+.section-title{font-size:19px;font-weight:700;margin:20px 0 12px}
+.meta{
+  background:white;border:1px solid var(--borde);border-radius:15px;padding:13px;
+  display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:13px
+}
+.meta label{font-size:12px;color:var(--gris);font-weight:700;text-transform:uppercase}
+.meta input{width:100%;border:1px solid var(--borde);border-radius:9px;padding:10px;outline:none;background:#fbfcfa}
+.meta input:focus,.table-input:focus,.note-input:focus{border-color:var(--verde);box-shadow:0 0 0 2px rgba(113,130,104,.12)}
+.card{background:white;border:1px solid var(--borde);border-radius:16px;box-shadow:var(--sombra);overflow:hidden}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:500px}
+th{background:var(--verde-claro);padding:12px 8px;text-align:center;font-size:14px}
+td{border-top:1px solid var(--borde);padding:7px}
+.table-input{width:100%;border:1px solid transparent;border-radius:8px;padding:10px 8px;outline:0;background:transparent}
+.product-input{min-width:190px}
+.number-input{min-width:90px;text-align:center}
+.row-number{width:34px;text-align:center;color:var(--gris);font-size:13px}
+.empty{padding:30px 15px;text-align:center;color:var(--gris)}
+.bottom-actions{
+  display:flex;justify-content:space-between;align-items:center;margin:14px 0 30px
+}
+.round-btn{
+  width:54px;height:54px;border-radius:50%;border:0;background:var(--verde);color:white;
+  font-size:30px;box-shadow:var(--sombra)
+}
+.round-btn.minus{background:#777d76}
+.menu-wrap{position:relative}
+.dropdown{
+  position:absolute;right:10px;top:54px;background:white;border:1px solid var(--borde);
+  border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.16);width:190px;overflow:hidden;z-index:30
+}
+.dropdown button{
+  width:100%;border:0;background:white;padding:14px 16px;text-align:left;font-size:15px
+}
+.dropdown button:active{background:var(--verde-claro)}
+.hidden{display:none!important}
+.back-btn{font-size:27px}
+.saved-tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 18px}
+.tab-btn{
+  border:1px solid var(--borde);background:white;border-radius:14px;padding:15px 8px;
+  font-weight:700;color:var(--texto)
+}
+.tab-btn.active{background:var(--verde);color:white;border-color:var(--verde)}
+.saved-list{display:grid;gap:11px}
+.saved-item{
+  background:white;border:1px solid var(--borde);border-radius:14px;padding:14px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px
+}
+.saved-info{min-width:0}
+.saved-title{font-weight:700;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saved-date{font-size:13px;color:var(--gris)}
+.delete-small{border:0;background:#f9eaea;color:var(--rojo);width:42px;height:42px;border-radius:10px;font-size:20px}
+.note-paper{
+  background:white;border:1px solid var(--borde);border-radius:15px;box-shadow:var(--sombra);
+  padding:15px
+}
+.note-area{
+  width:100%;min-height:230px;resize:vertical;border:1px solid var(--borde);border-radius:12px;
+  padding:13px;outline:0;line-height:1.55;background:#fff
+}
+.sales-box{margin-top:15px;border-top:1px solid var(--borde);padding-top:15px}
+.sales-add{display:grid;grid-template-columns:1fr 90px 48px;gap:8px}
+.note-input{
+  width:100%;border:1px solid var(--borde);border-radius:9px;padding:10px;outline:0
+}
+.add-sale{border:0;border-radius:9px;background:var(--verde);color:white;font-size:22px}
+.sales-table{margin-top:12px;width:100%;border-collapse:collapse}
+.sales-table th,.sales-table td{padding:9px;border-bottom:1px solid var(--borde);text-align:left}
+.sales-table th:last-child,.sales-table td:last-child{text-align:center}
+.total-row{font-weight:700;background:var(--verde-claro)}
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+  background:#263028;color:white;padding:12px 18px;border-radius:12px;opacity:0;
+  pointer-events:none;transition:.25s;z-index:100;max-width:90%;text-align:center
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;
+  justify-content:center;padding:18px;z-index:80
+}
+.modal{
+  width:min(500px,100%);background:white;border-radius:18px;padding:20px;box-shadow:0 15px 50px rgba(0,0,0,.25)
+}
+.modal h3{margin-top:0}
+.modal-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px}
+.modal-actions button{border:0;border-radius:10px;padding:11px 16px}
+.cancel{background:#eee;color:#333}.confirm{background:var(--verde);color:white}
+@media(min-width:700px){
+  .meta{grid-template-columns:repeat(3,1fr)}
+  .home-buttons{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div id="app" class="app"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+const STORAGE = {
+  ipv: "ipv_app_ipv_v1",
+  notes: "ipv_app_notes_v1",
+  products: "ipv_app_products_v1"
+};
+
+let state = {
+  screen: "home",
+  ipv: null,
+  note: null,
+  savedTab: "ipv",
+  homeSearch: "",
+  menuOpen: false
+};
+
+function uid(prefix="id"){
+  return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+}
+function load(key, fallback=[]){
+  try { return JSON.parse(localStorage.getItem(key)) || fallback; }
+  catch(e){ return fallback; }
+}
+function save(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+function nowParts(){
+  const d = new Date();
+  return {
+    date: d.toLocaleDateString("es-ES"),
+    time: d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})
+  };
+}
+function escapeHtml(v){
+  return String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+function showToast(msg){
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.classList.add("show");
+  clearTimeout(showToast.t);
+  showToast.t=setTimeout(()=>el.classList.remove("show"),2200);
+}
+function sortProducts(products){
+  return [...products].sort((a,b)=>
+    String(a.product||"").localeCompare(String(b.product||""),"es",{sensitivity:"base"})
+  );
+}
+function getIPVs(){ return load(STORAGE.ipv,[]); }
+function getNotes(){ return load(STORAGE.notes,[]); }
+
+function render(){
+  const app=document.getElementById("app");
+  if(state.screen==="home") app.innerHTML=homeHTML();
+  else if(state.screen==="ipv") app.innerHTML=ipvHTML();
+  else if(state.screen==="notes") app.innerHTML=notesHTML();
+  else if(state.screen==="saved") app.innerHTML=savedHTML();
+  attachEvents();
+}
+
+function homeHTML(){
+  const q=state.homeSearch.trim().toLowerCase();
+  const all=[
+    ...getIPVs().map(x=>({...x,type:"IPV",kind:"ipv"})),
+    ...getNotes().map(x=>({...x,type:"Hoja de apuntes",kind:"notes"}))
+  ].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const filtered=q ? all.filter(x=>
+    String(x.date).toLowerCase().includes(q) ||
+    String(x.time).toLowerCase().includes(q) ||
+    String(x.responsible).toLowerCase().includes(q)
+  ) : [];
+  return `
+    <header class="topbar">
+      <div class="topbar-title">IPV 📋</div>
+      <div></div>
+    </header>
+    <main class="page">
+      <h1 class="home-title">Control de inventario</h1>
+      <div class="home-buttons">
+        <button class="big-btn primary" id="newIpv">📦 IPV</button>
+        <button class="big-btn" id="newNote">📝 Hoja de apuntes</button>
+        <button class="big-btn" id="openSaved">💾 Guardados</button>
+      </div>
+      <div class="search-home">
+        <span style="font-size:22px">🔍</span>
+        <input id="homeSearch" value="${escapeHtml(state.homeSearch)}" placeholder="Buscar IPV u hoja por fecha...">
+      </div>
+      ${q ? `
+        <div class="section-title">Resultados</div>
+        <div class="saved-list">
+          ${filtered.length ? filtered.map(x=>`
+            <div class="saved-item">
+              <div class="saved-info">
+                <div class="saved-title">${x.type}</div>
+                <div class="saved-date">${escapeHtml(x.date)} · ${escapeHtml(x.time)} · ${escapeHtml(x.responsible||"Sin responsable")}</div>
+              </div>
+              <button class="tab-btn" data-open-type="${x.kind}" data-id="${x.id}">Abrir</button>
+            </div>
+          `).join("") : `<div class="card empty">No hay resultados.</div>`}
+        </div>` : ""}
+    </main>`;
+}
+
+function ipvHTML(){
+  const x=state.ipv;
+  const products=sortProducts(x.products);
+  return `
+    <header class="topbar">
+      <button class="icon-btn back-btn" id="backHome" title="Volver">←</button>
+      <div class="topbar-title">IPV</div>
+      <div class="menu-wrap">
+        <button class="icon-btn" id="toggleMenu">☰</button>
+        ${menuHTML("ipv")}
+      </div>
+    </header>
+    <main class="page">
+      <div class="search-home" style="margin-top:0;margin-bottom:12px">
+        <span style="font-size:22px">🔍</span>
+        <input id="ipvSearch" placeholder="Buscar producto..." value="${escapeHtml(x.search||"")}">
+      </div>
+      <div class="meta">
+        <div><label>Fecha</label><input id="ipvDate" type="date" value="${escapeHtml(x.dateISO||"")}"></div>
+        <div><label>Hora</label><input id="ipvTime" type="time" value="${escapeHtml(x.time24||"")}"></div>
+        <div><label>Responsable</label><input id="ipvResponsible" value="${escapeHtml(x.responsible||"")}" placeholder="Nombre"></div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>#</th><th>Producto</th><th>Inicio</th><th>Entrada</th><th>Final</th>
+            </tr></thead>
+            <tbody id="ipvBody">
+              ${products.length ? products.map((p,i)=>`
+                <tr data-id="${p.id}">
+                  <td class="row-number">${i+1}</td>
+                  <td><input class="table-input product-input" data-field="product" value="${escapeHtml(p.product)}" placeholder="Producto"></td>
+                  <td><input class="table-input number-input" data-field="inicio" inputmode="numeric" type="number" min="0" value="${escapeHtml(p.inicio)}"></td>
+                  <td><input class="table-input number-input" data-field="entrada" inputmode="numeric" type="number" min="0" value="${escapeHtml(p.entrada)}"></td>
+                  <td><input class="table-input number-input" data-field="final" inputmode="numeric" type="number" min="0" value="${escapeHtml(p.final)}"></td>
+                </tr>
+              `).join("") : `<tr><td colspan="5" class="empty">No hay productos. Pulsa + para agregar.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="bottom-actions">
+        <button class="round-btn" id="addProduct" title="Agregar producto">+</button>
+        <button class="round-btn minus" id="removeProduct" title="Eliminar último producto">−</button>
+      </div>
+    </main>`;
+}
+
+function menuHTML(type){
+  return `
+  <div id="actionMenu" class="dropdown ${state.menuOpen?"":"hidden"}">
+    <button data-action="share">📤 Compartir</button>
+    <button data-action="save">💾 Guardar</button>
+    <button data-action="delete">🗑️ Eliminar</button>
+    <button data-action="download">⬇️ Descargar</button>
+  </div>`;
+}
+
+function notesHTML(){
+  const x=state.note;
+  return `
+    <header class="topbar">
+      <button class="icon-btn back-btn" id="backHome">←</button>
+      <div class="topbar-title">Hoja de apuntes</div>
+      <div class="menu-wrap">
+        <button class="icon-btn" id="toggleMenu">☰</button>
+        ${menuHTML("notes")}
+      </div>
+    </header>
+    <main class="page">
+      <div class="meta">
+        <div><label>Fecha</label><input id="noteDate" type="date" value="${escapeHtml(x.dateISO||"")}"></div>
+        <div><label>Hora</label><input id="noteTime" type="time" value="${escapeHtml(x.time24||"")}"></div>
+        <div><label>Responsable</label><input id="noteResponsible" value="${escapeHtml(x.responsible||"")}" placeholder="Nombre"></div>
+      </div>
+      <div class="note-paper">
+        <label style="font-weight:700;display:block;margin-bottom:8px">Apuntes / ventas</label>
+        <textarea id="noteText" class="note-area" placeholder="Escribe aquí lo que se va vendiendo...">${escapeHtml(x.text||"")}</textarea>
+        <div class="sales-box">
+          <div style="font-weight:700;margin-bottom:10px">Cantidades vendidas por producto</div>
+          <div class="sales-add">
+            <input id="saleProduct" class="note-input" placeholder="Producto">
+            <input id="saleQty" class="note-input" type="number" min="1" inputmode="numeric" placeholder="Cantidad">
+            <button id="addSale" class="add-sale">+</button>
+          </div>
+          <table class="sales-table">
+            <thead><tr><th>Producto</th><th>Cantidad</th><th>Quitar</th></tr></thead>
+            <tbody>
+              ${x.sales.length ? x.sales.map((s,i)=>`
+                <tr>
+                  <td>${escapeHtml(s.product)}</td>
+                  <td>${escapeHtml(s.qty)}</td>
+                  <td><button class="delete-small" data-sale-index="${i}">×</button></td>
+                </tr>
+              `).join("") : `<tr><td colspan="3" class="empty">Todavía no hay cantidades registradas.</td></tr>`}
+              ${x.sales.length ? `<tr class="total-row"><td>TOTAL</td><td>${x.sales.reduce((a,b)=>a+Number(b.qty||0),0)}</td><td></td></tr>` : ""}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>`;
+}
+
+function savedHTML(){
+  const list=state.savedTab==="ipv"?getIPVs():getNotes();
+  const sorted=[...list].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  return `
+    <header class="topbar">
+      <button class="icon-btn back-btn" id="backHome">←</button>
+      <div class="topbar-title">Guardados</div>
+      <div></div>
+    </header>
+    <main class="page">
+      <div class="saved-tabs">
+        <button class="tab-btn ${state.savedTab==="ipv"?"active":""}" data-tab="ipv">📦 IPV guardados</button>
+        <button class="tab-btn ${state.savedTab==="notes"?"active":""}" data-tab="notes">📝 Hojas de apuntes</button>
+      </div>
+      <div class="saved-list">
+        ${sorted.length ? sorted.map(x=>`
+          <div class="saved-item">
+            <div class="saved-info">
+              <div class="saved-title">${state.savedTab==="ipv"?"IPV":"Hoja de apuntes"} · ${escapeHtml(x.date)}</div>
+              <div class="saved-date">${escapeHtml(x.time)} · ${escapeHtml(x.responsible||"Sin responsable")}</div>
+            </div>
+            <div style="display:flex;gap:7px">
+              <button class="tab-btn" data-open-saved="${state.savedTab}" data-id="${x.id}">Abrir</button>
+              <button class="delete-small" data-delete-saved="${state.savedTab}" data-id="${x.id}">🗑</button>
+            </div>
+          </div>
+        `).join("") : `<div class="card empty">No hay elementos guardados.</div>`}
+      </div>
+    </main>`;
+}
+
+function makeNewIpv(){
+  const n=nowParts(), d=new Date();
+  state.ipv={
+    id:uid("ipv"), date:n.date, time:n.time,
+    dateISO:d.toISOString().slice(0,10),
+    time24:d.toTimeString().slice(0,5),
+    responsible:"", products:load(STORAGE.products,[]).map(name=>({
+      id:uid("p"),product:name,inicio:"",entrada:"",final:""
+    })), search:"", createdAt:d.toISOString(), saved:false
+  };
+  state.menuOpen=false; state.screen="ipv"; render();
+}
+function makeNewNote(){
+  const n=nowParts(), d=new Date();
+  state.note={
+    id:uid("note"),date:n.date,time:n.time,
+    dateISO:d.toISOString().slice(0,10),time24:d.toTimeString().slice(0,5),
+    responsible:"",text:"",sales:[],createdAt:d.toISOString(),saved:false
+  };
+  state.menuOpen=false; state.screen="notes"; render();
+}
+function updateIpvFromInputs(){
+  if(!state.ipv)return;
+  const date=document.getElementById("ipvDate");
+  const time=document.getElementById("ipvTime");
+  const resp=document.getElementById("ipvResponsible");
+  if(date){state.ipv.dateISO=date.value; state.ipv.date=date.value ? new Date(date.value+"T12:00:00").toLocaleDateString("es-ES") : "";}
+  if(time){state.ipv.time24=time.value; state.ipv.time=time.value;}
+  if(resp)state.ipv.responsible=resp.value;
+}
+function updateNoteFromInputs(){
+  if(!state.note)return;
+  const date=document.getElementById("noteDate"),time=document.getElementById("noteTime"),resp=document.getElementById("noteResponsible"),text=document.getElementById("noteText");
+  if(date){state.note.dateISO=date.value; state.note.date=date.value ? new Date(date.value+"T12:00:00").toLocaleDateString("es-ES") : "";}
+  if(time){state.note.time24=time.value; state.note.time=time.value;}
+  if(resp)state.note.responsible=resp.value;
+  if(text)state.note.text=text.value;
+}
+function rememberProducts(){
+  const names=sortProducts(state.ipv.products).map(p=>String(p.product||"").trim()).filter(Boolean);
+  save(STORAGE.products,[...new Set(names)]);
+}
+function persistCurrent(type, silent=false){
+  if(type==="ipv"){
+    updateIpvFromInputs();
+    rememberProducts();
+    const list=getIPVs(), copy=JSON.parse(JSON.stringify(state.ipv));
+    copy.saved=true; copy.createdAt=copy.createdAt||new Date().toISOString();
+    const idx=list.findIndex(x=>x.id===copy.id);
+    if(idx>=0)list[idx]=copy;else list.push(copy);
+    save(STORAGE.ipv,list);
+    state.ipv.saved=true;
+  }else{
+    updateNoteFromInputs();
+    const list=getNotes(), copy=JSON.parse(JSON.stringify(state.note));
+    copy.saved=true; copy.createdAt=copy.createdAt||new Date().toISOString();
+    const idx=list.findIndex(x=>x.id===copy.id);
+    if(idx>=0)list[idx]=copy;else list.push(copy);
+    save(STORAGE.notes,list);
+    state.note.saved=true;
+  }
+  if(!silent)showToast("Guardado correctamente");
+}
+function deleteCurrent(type){
+  if(!confirm("¿Eliminar este elemento? Esta acción no se puede deshacer."))return;
+  if(type==="ipv"){
+    save(STORAGE.ipv,getIPVs().filter(x=>x.id!==state.ipv.id));
+    state.screen="home";state.ipv=null;
+  }else{
+    save(STORAGE.notes,getNotes().filter(x=>x.id!==state.note.id));
+    state.screen="home";state.note=null;
+  }
+  state.menuOpen=false;render();showToast("Eliminado");
+}
+function csvIpv(){
+  updateIpvFromInputs();
+  const rows=[["Producto","Inicio","Entrada","Final"],...sortProducts(state.ipv.products).map(p=>[p.product,p.inicio,p.entrada,p.final])];
+  return rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\n");
+}
+function csvNote(){
+  updateNoteFromInputs();
+  const rows=[["Producto","Cantidad"],...state.note.sales.map(s=>[s.product,s.qty])];
+  return rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\n");
+}
+function downloadFile(filename, content, mime="text/plain"){
+  const blob=new Blob([content],{type:mime+";charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+async function shareCurrent(type){
+  if(type==="ipv"){persistCurrent("ipv",true);}
+  else{persistCurrent("notes",true);}
+  let text="";
+  if(type==="ipv"){
+    text="IPV - "+state.ipv.date+" "+state.ipv.time+"\nResponsable: "+(state.ipv.responsible||"—")+
+      "\n\n"+sortProducts(state.ipv.products).map(p=>`${p.product||"Producto"} | Inicio: ${p.inicio||0} | Entrada: ${p.entrada||0} | Final: ${p.final||0}`).join("\n");
+  }else{
+    text="HOJA DE APUNTES - "+state.note.date+" "+state.note.time+"\nResponsable: "+(state.note.responsible||"—")+
+      "\n\n"+(state.note.text||"")+"\n\nCantidades:\n"+state.note.sales.map(s=>`${s.product}: ${s.qty}`).join("\n");
+  }
+  if(navigator.share){
+    try{await navigator.share({title:type==="ipv"?"IPV":"Hoja de apuntes",text});return;}catch(e){}
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast("Contenido copiado. Puedes pegarlo en WhatsApp.");
+  }catch(e){showToast("No se pudo abrir compartir en este dispositivo.");}
+}
+
+function attachEvents(){
+  const $=id=>document.getElementById(id);
+
+  if($("newIpv"))$("newIpv").onclick=makeNewIpv;
+  if($("newNote"))$("newNote").onclick=makeNewNote;
+  if($("openSaved"))$("openSaved").onclick=()=>{state.screen="saved";render();};
+  if($("homeSearch"))$("homeSearch").oninput=e=>{state.homeSearch=e.target.value;render();setTimeout(()=>{const x=$("homeSearch");if(x){x.focus();x.setSelectionRange(x.value.length,x.value.length)}},0);};
+
+  document.querySelectorAll("[data-open-type]").forEach(btn=>{
+    btn.onclick=()=>{
+      const list=btn.dataset.openType==="ipv"?getIPVs():getNotes();
+      const found=list.find(x=>x.id===btn.dataset.id);
+      if(!found)return;
+      if(btn.dataset.openType==="ipv"){state.ipv=found;state.screen="ipv";}else{state.note=found;state.screen="notes";}
+      render();
+    };
+  });
+
+  if($("backHome"))$("backHome").onclick=()=>{state.screen="home";state.menuOpen=false;render();};
+
+  if($("toggleMenu"))$("toggleMenu").onclick=e=>{e.stopPropagation();state.menuOpen=!state.menuOpen;render();};
+
+  document.querySelectorAll("[data-action]").forEach(btn=>{
+    btn.onclick=()=>{
+      state.menuOpen=false;
+      const action=btn.dataset.action;
+      const type=state.screen==="ipv"?"ipv":"notes";
+      if(action==="save")persistCurrent(type);
+      if(action==="delete")deleteCurrent(type);
+      if(action==="share")shareCurrent(type);
+      if(action==="download"){
+        if(type==="ipv")downloadFile(`IPV_${state.ipv.dateISO||"sin_fecha"}.csv`,csvIpv(),"text/csv");
+        else downloadFile(`Hoja_apuntes_${state.note.dateISO||"sin_fecha"}.csv`,csvNote(),"text/csv");
+        showToast("Archivo descargado");
+      }
+      render();
+    };
+  });
+
+  if($("addProduct"))$("addProduct").onclick=()=>{
+    state.ipv.products.push({id:uid("p"),product:"",inicio:"",entrada:"",final:""});
+    render();
+    setTimeout(()=>document.querySelector("#ipvBody tr:last-child .product-input")?.focus(),50);
+  };
+  if($("removeProduct"))$("removeProduct").onclick=()=>{
+    if(!state.ipv.products.length)return;
+    state.ipv.products.pop();render();showToast("Último producto eliminado");
+  };
+  if($("ipvSearch"))$("ipvSearch").oninput=e=>{state.ipv.search=e.target.value;filterIpvRows();};
+  document.querySelectorAll("#ipvBody tr[data-id] input").forEach(input=>{
+    input.oninput=e=>{
+      const row=e.target.closest("tr"), p=state.ipv.products.find(x=>x.id===row.dataset.id);
+      if(!p)return;
+      p[e.target.dataset.field]=e.target.value;
+      if(e.target.dataset.field==="product")rememberProducts();
+      if(e.target.dataset.field!=="product" && Number(e.target.value)<0)e.target.value=p[e.target.dataset.field]="0";
+    };
+  });
+  ["ipvDate","ipvTime","ipvResponsible"].forEach(id=>{if($(id))$(id).oninput=updateIpvFromInputs;});
+
+  if($("addSale"))$("addSale").onclick=()=>{
+    const p=$("saleProduct").value.trim(),q=Number($("saleQty").value);
+    if(!p||!q||q<1){showToast("Escribe un producto y una cantidad válida.");return;}
+    const existing=state.note.sales.find(s=>s.product.toLowerCase()===p.toLowerCase());
+    if(existing)existing.qty=Number(existing.qty)+q;
+    else state.note.sales.push({product:p,qty:q});
+    $("saleProduct").value="";$("saleQty").value="";render();
+  };
+  document.querySelectorAll("[data-sale-index]").forEach(btn=>{
+    btn.onclick=()=>{state.note.sales.splice(Number(btn.dataset.saleIndex),1);render();}
+  });
+  ["noteDate","noteTime","noteResponsible","noteText"].forEach(id=>{if($(id))$(id).oninput=updateNoteFromInputs;});
+
+  document.querySelectorAll("[data-tab]").forEach(btn=>{
+    btn.onclick=()=>{state.savedTab=btn.dataset.tab;render();}
+  });
+  document.querySelectorAll("[data-open-saved]").forEach(btn=>{
+    btn.onclick=()=>{
+      const list=btn.dataset.openSaved==="ipv"?getIPVs():getNotes();
+      const found=list.find(x=>x.id===btn.dataset.id);if(!found)return;
+      if(btn.dataset.openSaved==="ipv"){state.ipv=found;state.screen="ipv";}else{state.note=found;state.screen="notes";}
+      render();
+    };
+  });
+  document.querySelectorAll("[data-delete-saved]").forEach(btn=>{
+    btn.onclick=()=>{
+      if(!confirm("¿Borrar este elemento guardado?"))return;
+      if(btn.dataset.deleteSaved==="ipv")save(STORAGE.ipv,getIPVs().filter(x=>x.id!==btn.dataset.id));
+      else save(STORAGE.notes,getNotes().filter(x=>x.id!==btn.dataset.id));
+      render();showToast("Borrado");
+    };
+  });
+}
+
+function filterIpvRows(){
+  const q=(state.ipv.search||"").trim().toLowerCase();
+  document.querySelectorAll("#ipvBody tr[data-id]").forEach(tr=>{
+    const p=state.ipv.products.find(x=>x.id===tr.dataset.id);
+    tr.style.display=!q||String(p.product).toLowerCase().includes(q)?"":"none";
+  });
+}
+
+document.addEventListener("click",e=>{
+  if(state.menuOpen && !e.target.closest(".menu-wrap")){
+    state.menuOpen=false;render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
