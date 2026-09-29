@@ -1,0 +1,10 @@
+{
+  "name": "IPV - Control de Inventario",
+  "short_name": "IPV",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f6f5",
+  "theme_color": "#718268",
+  "description": "Aplicación de control de inventario IPV",
+  "orientation": "portrait"
+}
